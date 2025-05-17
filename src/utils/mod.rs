@@ -1,15 +1,6 @@
-use async_graphql::Object;
-use axum::response::IntoResponse;
-use axum::response::{self};
+use axum::response::{self, IntoResponse};
 
-pub struct Query;
-
-#[Object]
-impl Query {
-    async fn hello(&self) -> &'static str {
-        "partner"
-    }
-}
+pub mod encryption;
 
 pub async fn graphiql_sandbox() -> impl IntoResponse {
     let html = r##"
