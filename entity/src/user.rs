@@ -2,16 +2,46 @@
 
 use sea_orm::entity::prelude::*;
 
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum Role {
+    #[sea_orm(string_value = "ADMIN")]
+    Admin,
+    #[sea_orm(string_value = "USER")]
+    User,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum Language {
+    #[sea_orm(string_value = "EN")]
+    En,
+    #[sea_orm(string_value = "RU")]
+    Ru,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum ColorScheme {
+    #[sea_orm(string_value = "LIGHT")]
+    Light,
+    #[sea_orm(string_value = "DARK")]
+    Dark,
+}
+
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
 #[sea_orm(table_name = "users")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub id: Uuid,
+    pub id: String,
     pub created_at: DateTimeUtc,
     pub updated_at: DateTimeUtc,
     #[sea_orm(unique)]
-    pub name: String,
+    pub login: String,
     pub password: String,
+    pub role: Role,
+    pub language: Language,
+    pub color_scheme: ColorScheme,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

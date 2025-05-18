@@ -4,6 +4,7 @@ use argon2::{
 };
 use rand::{TryRngCore, rngs::OsRng};
 
+#[allow(dead_code)]
 pub fn hash_password(password: &str) -> String {
     let mut bytes = [0u8; Salt::RECOMMENDED_LENGTH];
     OsRng.try_fill_bytes(&mut bytes).unwrap();

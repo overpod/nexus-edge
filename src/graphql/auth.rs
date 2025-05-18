@@ -1,10 +1,10 @@
-use async_graphql::{Context, Object, Result, ErrorExtensions};
 use ::entity::{user, user::Entity as User};
+use async_graphql::{Context, ErrorExtensions, Object, Result};
 
-use nexus_edge::model::SignInInput;
-use sea_orm::{DbConn, EntityTrait, QueryFilter, ColumnTrait};
+use nexus_edge::model::{AuthPayload, AuthUser, Language, Role, SignInInput};
+use sea_orm::{ColumnTrait, DbConn, EntityTrait, QueryFilter};
 
-use crate::utils::encryption::verify_password;
+use crate::utils::{encryption::verify_password, jwt};
 
 use super::errors::GraphQLError;
 
@@ -13,27 +13,39 @@ pub struct AuthMutation {}
 
 #[Object]
 impl AuthMutation {
-    async fn sign_in(&self, ctx: &Context<'_>, input: SignInInput) -> Result<bool> {
-        let db = ctx.data::<DbConn>()?;
+    async fn sign_in(&self, ctx: &Context<'_>, input: SignInInput) -> Result<AuthPayload> {
+        let db = ctx.data::<DbConn>().unwrap();
+
         let user = User::find()
-            .filter(user::Column::Name.eq(input.username))
+            .filter(user::Column::Login.contains(&input.login))
             .one(db)
             .await
             .unwrap();
 
         if user.is_none() {
-            return Err(GraphQLError::UserNotFound.extend())
+            return Err(GraphQLError::UserNotFound.extend());
         }
         let user = user.unwrap();
-        verify_password(&user.password, &input.password)?;
+        let verify = verify_password(&user.password, &input.password);
 
-        //let password_hash = &user.password_hash.ok_or(ApiError::AccessDenied)?;
-        // let model_input = nexus_edge::model::SignInInput {
-        //     username: input.username,
-        //     password: input.password,
-        // };
-        // let user = service::sign_in(db.clone(), model_input).await;
+        if verify.is_err() {
+            return Err(GraphQLError::InvalidPassword.extend());
+        }
 
-        Ok(true)
+        Ok(AuthPayload {
+            token: jwt::sign(user.id.clone())?,
+            user: AuthUser {
+                id: user.id.to_string(),
+                login: user.login,
+                role: match user.role {
+                    user::Role::Admin => Role::Admin,
+                    user::Role::User => Role::User,
+                },
+                language: match user.language {
+                    user::Language::En => Language::En,
+                    user::Language::Ru => Language::Ru,
+                },
+            },
+        })
     }
 }

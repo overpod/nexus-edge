@@ -11,11 +11,14 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(Users::Table)
                     .if_not_exists()
-                    .col(string(Users::Id).not_null().uuid().primary_key())
-                    .col(ColumnDef::new(Users::CreatedAt).timestamp().not_null())
-                    .col(ColumnDef::new(Users::UpdatedAt).timestamp().not_null())
-                    .col(string(Users::Name).unique_key().not_null())
-                    .col(string(Users::Password).not_null())
+                    .col(text(Users::Id).unique_key().primary_key())
+                    .col(ColumnDef::new(Users::CreatedAt).timestamp())
+                    .col(ColumnDef::new(Users::UpdatedAt).timestamp())
+                    .col(text(Users::Login).unique_key())
+                    .col(text(Users::Password))
+                    .col(text(Users::Role))
+                    .col(text(Users::Language))
+                    .col(text(Users::ColorScheme))
                     .to_owned(),
             )
             .await
@@ -34,6 +37,9 @@ enum Users {
     Id,
     CreatedAt,
     UpdatedAt,
-    Name,
+    Login,
     Password,
+    Role,
+    Language,
+    ColorScheme,
 }
